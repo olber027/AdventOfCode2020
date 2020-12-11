@@ -51,17 +51,34 @@ You glance back down at your bag and try to remember why you brought so many ada
 What is the total number of distinct ways you can arrange the adapters to connect the charging outlet to your device?
 '''
 
-#lower bound is exclusive, upperBound is inclusive
-def getItemsInRange(itemList, lowerBound, upperBound):
+def getDifference(joltageList, firstIndex, secondIndex):
+    if not (secondIndex < len(joltageList)):
+        return 9999999999
+    return joltageList[secondIndex] - joltageList[firstIndex]
+
+def getOptions(joltageList, currentIndex):
+    searchIndex = currentIndex + 1
     result = []
-    for i in range(lowerBound + 1, upperBound + 1):
-        if i in itemList:
-            result.append(i)
+    while getDifference(joltageList, currentIndex, searchIndex) <= 3:
+        result.append(searchIndex)
+        searchIndex += 1
     return result
+
+def getNumOptions(joltageList, currentIndex):
+    return len(getOptions(joltageList, currentIndex))
+
+def findNumberOfPaths(joltageList, startIndex, endIndex):
+    if startIndex == endIndex:
+        return 1
+    nextOptions = getOptions(joltageList, startIndex)
+    totalOptions = 0
+    for nextOption in nextOptions:
+        totalOptions += findNumberOfPaths(joltageList, nextOption, endIndex)
+    return totalOptions
 
 joltages = []
 
-with open("Data\\test.txt", "r") as inputFile:
+with open("Data\input.txt", "r") as inputFile:
     for joltage in inputFile:
         joltages.append(int(joltage))
 
@@ -69,4 +86,20 @@ joltages.append(0)
 joltages = sorted(joltages)
 joltages.append(joltages[-1] + 3)
 
-#todo figure this shit out
+partitions = []
+
+currentPartition = set()
+for index in range(len(joltages) - 1):
+    if getNumOptions(joltages, index) > 1:
+        currentPartition.add(index)
+        currentPartition.update(getOptions(joltages, index))
+    else:
+        if len(currentPartition) > 0 and getNumOptions(joltages, max(currentPartition)) == 1:
+            partitions.append(currentPartition)
+            currentPartition = set()
+
+totalPaths = 1
+for partition in [sorted(part) for part in partitions]:
+    totalPaths *= findNumberOfPaths(joltages, partition[0], partition[-1])
+
+print(totalPaths)
