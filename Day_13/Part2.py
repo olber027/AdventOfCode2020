@@ -58,26 +58,27 @@ However, with so many bus IDs in your list, surely the actual earliest timestamp
 
 What is the earliest timestamp such that all of the listed bus IDs depart at offsets matching their positions in the list?
 '''
+import math
+
+def lcm(a, b):
+    return abs(a*b) // math.gcd(a,b)
+
 busList = []
 
 with open("Data\input.txt", "r") as inputFile:
     garbage = int(inputFile.readline())
-    busList = [x for x in inputFile.readline().split(",")]
+    busList = [x.strip() for x in inputFile.readline().split(",")]
 
 pairedBusList = enumerate(busList)
 pairedBusList = [(relativeDepartureTime, int(busNumber)) for relativeDepartureTime, busNumber in pairedBusList if busNumber != "x"]
-pairedBusList = list(reversed(sorted(pairedBusList, key=lambda x:x[1])))
 
 step = pairedBusList[0][1]
-currentGuess = step - pairedBusList[0][0]
+currentGuess = 0
 
-while True:
-    correctCount = 0
-    for relativeTime, busNumber in pairedBusList:
-        if (currentGuess+relativeTime) % busNumber != 0:
+for relativeTime, busNumber in pairedBusList[1:]:
+    while True:
+        if (currentGuess+relativeTime) % busNumber == 0:
             break
-        correctCount += 1
-    if correctCount == len(pairedBusList):
-        print(currentGuess)
-        break
-    currentGuess += step
+        currentGuess += step
+    step = lcm(step, busNumber)
+print(currentGuess)
